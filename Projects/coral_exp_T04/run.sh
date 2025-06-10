@@ -31,7 +31,7 @@ rm *.mod
 #
 mkdir -p output
 #
-./ecosys_test.exe < coral_pre_2w.in
+#./ecosys_test.exe < coral_pre_2w.in
 #./ecosys_test.exe < coral_main_L0000_T28.in
 #./ecosys_test.exe < coral_main_L0000_T32.in
 #./ecosys_test.exe < coral_main_L0100_T28.in
