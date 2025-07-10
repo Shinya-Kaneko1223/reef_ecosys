@@ -51,7 +51,7 @@
 !    
 !           1       5     8 9 10  12
 !           |       |     | | |   |
-  in_file = 0,0,0,0,0,0,0,0,0,0,0,0
+  in_file = 0,0,0,0,0,0,0,0,1,0,0,0
 /
 
 &input
@@ -68,7 +68,7 @@
   Cloud_FILE = "input/Ishigaki_frc_JMAobs_2018_cloud.nc"    ! Relative humidity (%)
 
 ! Only ascii text file is acceptable.
-  PPFD_FILE  = "input/PPFD.txt"
+  PPFD_FILE  = "input/PPFD_400pre.txt"
 ! Only ascii text file is acceptable.
   WTEMP_FILE  = "input/temp2018.txt"
   WLEVEL_FILE = "input/level2018.txt"
