@@ -68,7 +68,9 @@
   Cloud_FILE = "input/Ishigaki_frc_JMAobs_2018_cloud.nc"    ! Relative humidity (%)
 
 ! Only ascii text file is acceptable.
+!  PPFD_FILE  = "input/PPFD_150pre.txt"
   PPFD_FILE  = "input/PPFD_400pre.txt"
+!  PPFD_FILE  = "input/PPFD_800pre.txt"
 ! Only ascii text file is acceptable.
   WTEMP_FILE  = "input/temp2018.txt"
   WLEVEL_FILE = "input/level2018.txt"
