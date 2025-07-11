@@ -68,8 +68,8 @@
 
 ! Only ascii text file is acceptable.
 !  PPFD_FILE  = "input/PPFD_150pre.txt"
-!  PPFD_FILE  = "input/PPFD_400pre.txt"
-  PPFD_FILE  = "input/PPFD_800pre.txt"
+  PPFD_FILE  = "input/PPFD_400pre.txt"
+!  PPFD_FILE  = "input/PPFD_800pre.txt"
 ! Only ascii text file is acceptable.
   WTEMP_FILE  = "input/temp2018.txt"
   WLEVEL_FILE = "input/level2018.txt"
@@ -80,8 +80,8 @@
 &output   
 
 !  OUTFILE_prefix = 'output/L150/coral_bl_T33_L150'
-!  OUTFILE_prefix = 'output/L400/coral_bl_T33_L400'
-  OUTFILE_prefix = 'output/L800/coral_bl_T33_L800'
+  OUTFILE_prefix = 'output/L400/coral_bl_T33_L400'
+!  OUTFILE_prefix = 'output/L800/coral_bl_T33_L800'
 /
 
 !--- Initial Condition -----------------------------------------------------
