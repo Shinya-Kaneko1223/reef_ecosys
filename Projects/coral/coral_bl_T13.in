@@ -67,8 +67,8 @@
   Cloud_FILE = "input/Ishigaki_frc_JMAobs_2018_cloud.nc"    ! Relative humidity (%)
 
 ! Only ascii text file is acceptable.
-!  PPFD_FILE  = "input/PPFD_150pre.txt"
-  PPFD_FILE  = "input/PPFD_400pre.txt"
+  PPFD_FILE  = "input/PPFD_150pre.txt"
+!  PPFD_FILE  = "input/PPFD_400pre.txt"
 !  PPFD_FILE  = "input/PPFD_800pre.txt"
 ! Only ascii text file is acceptable.
   WTEMP_FILE  = "input/temp2018.txt"
@@ -79,7 +79,9 @@
 
 &output   
 
-  OUTFILE_prefix = 'output/coral_bl_T13'
+  OUTFILE_prefix = 'output/L150/coral_bl_T13_L150'
+!  OUTFILE_prefix = 'output/L400/coral_bl_T13_L400'
+!  OUTFILE_prefix = 'output/L800/coral_bl_T13_L800'
 /
 
 !--- Initial Condition -----------------------------------------------------
