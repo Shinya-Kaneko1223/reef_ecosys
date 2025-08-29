@@ -259,7 +259,7 @@ CONTAINS
                             ! QC0= 50.0d0
             ZOOX(ng)%Chl(n,i,j)  = 3.5 ! 2.0d0 ! (pg/cell) Suggett et al. 2008
 !            QAt = ZOOX(ng)%Chl(n,i,j)*1.2d-6 ! (pmolRCII/cell) 1.2d-6 ~1.7d-6 -> Suggett et al. 2008
-            QAt = 1.2d-6 ! (pmolRCII/cell) 1.2d-6 ~1.7d-6 -> Suggett et al. 2008
+            QAt = 1.5d-6 ! (pmolRCII/cell) 1.2d-6 ~1.7d-6 -> Suggett et al. 2008
             ZOOX(ng)%QAo(n,i,j) = QAt*0.6d0 ! (pmolRCII/cell) 1.2d-6 ~1.7d-6 -> Suggett et al. 2008
             ZOOX(ng)%QAr(n,i,j) = 0.0d0
             ZOOX(ng)%QAi(n,i,j) = QAt*0.4d0
@@ -738,6 +738,7 @@ CONTAINS
     F_QP (:) = 0.0d0
 # endif
 # if defined CORAL_ZOOXANTHELLAE
+
     F_ROS = 0.0d0
 # endif
 !---- Temperature (K) -------------------------------------
@@ -2045,20 +2046,20 @@ CONTAINS
     !   ---- RubisCO activity related parameters -----------------
     real(8), parameter :: Vcmax = 0.5d-3   ! maximum carboxylation rate (pmol cell-1 s-1) !!! Tuning
     real(8), parameter :: Vomax = 0.2d0*Vcmax   ! maximum oxygenation rate (pmol cell-1 s-1) 
-    real(8), parameter :: Kco2  = 20.0d0  ! Half saturation constant (uM) !!! Tuning (Ref. von Caemmerer, 2000)
-    real(8), parameter :: Ko2   = 300.0d0 ! Half saturation constant (uM) !!! Tuning (Ref. von Caemmerer, 2000)
+    real(8) :: Kco2   ! Half saturation constant (uM) !!! Tuning (Ref. von Caemmerer, 2000)
+    real(8) :: Ko2    ! Half saturation constant (uM) !!! Tuning (Ref. von Caemmerer, 2000)
     real(8), parameter :: Krupb = 0.2d0   ! Half saturation constant (no dim) !!! Tuning (Ref. von Caemmerer, 2000)
     real(8), parameter :: kphot = 1.0d-3   ! rate constant of photosynthesis **** Unknown *********** 
 
 !    real(8), parameter :: A  = 3.0d11     ! !!! Tuning
-    real(8), parameter :: Ea = 1.4d5      ! !!! Tuning
-    real(8), parameter :: dS = 1.2d3     ! 
-    real(8), parameter :: dH = 3.58d5     ! 
+    real(8), parameter :: Ea = 3.1d4      ! !!! Tuning
+    real(8), parameter :: dS = 1200.0d0     ! 
+    real(8), parameter :: dH = 3.64d5     ! 
 
 !    real(8), parameter :: f_RO = 1.0d0    ! ROS fraction from zoox. to host. !!!Assumed
 
     real(8), parameter :: ko = 1.04d3     ! Relaxation rate of QAr to QAo (s-1) : tau = 960 us; Suggett et al. (2008)
-    real(8), parameter :: ki = 7.0d-7    ! Rate constant of photoinhibition (s-1 (umol m-2 s-1)-1)
+    real(8), parameter :: ki = 5.d-7    ! Rate constant of photoinhibition (s-1 (umol m-2 s-1)-1)
                                           !      Tyystjarvi & Aro (1996): 6.11d-8 (s-1 (umol m-2 s-1)-1);
                                           !      Nishiyama et al. (2004): 1.7d-7  (s-1 (umol m-2 s-1)-1)
 !    real(8), parameter :: di = 1.7d-4     ! Natural decay from QAa to QAi (s-1)  !!!Assumed
@@ -2073,9 +2074,9 @@ CONTAINS
     real(8), parameter :: kqap = 1.0d-11    ! rate constant for QAa production
     real(8), parameter :: QCzrm = 50.0d0    ! Threashold reserv QC value for Chl production 
     real(8), parameter :: uchl_max = 1.0d-4 ! Maximum Chl production rate (pg cell-1 s-1)  (Asssumed)
-    real(8), parameter :: QAt = 1.2d-6      ! Total RCII (pmol RCII cell-1)
+    !real(8), parameter :: QAt = 1.2d-6      ! Total RCII (pmol RCII cell-1) 光阻害のところと関与しそうなので
 !---------------------------------------------------------------------
-!    real(8) :: QAt       ! Total RCII (pmol RCII cell-1)
+    real(8) :: QAt       ! Total RCII (pmol RCII cell-1)
     real(8) :: QAa       ! Active RCII (pmol RCII cell-1)
     real(8) :: RubisCO   ! Active fraction of RubisCO
     real(8) :: Vc, Vo, f_temp, TK   
@@ -2098,7 +2099,7 @@ CONTAINS
     real(8) :: F_NADPH  ! Flux of normalized NADPH (s-1)
     real(8) :: F_RuBP   ! Flux of normalized RuBP (s-1)
     real(8) :: phi      ! Vo/Vc
-    
+    real(8) :: cff      ! for easy cal
 #  if defined CORAL_TESTMODE
 !  Output
 !    real(8), parameter :: CORAL_OUTPUT_INTERVAL  = 5.0d0    ! Output interval (min)
@@ -2116,32 +2117,43 @@ CONTAINS
 
 !---- Photosyenthetic rate (von Caemmerer, 2000; Eq.(2.34))
     TK = Tamb + 273.15 !(K)
-    f_temp = exp(-(TK-298.15)*Ea/298.15/Rg/TK)* &
-              (1.0d0+exp((298.15*dS-dH)/Rg/298.15))/(1.0d0+exp((TK*dS-dH)/Rg/TK))
+    cff = (TK-298.15d0)/298.15d0/Rg/TK
 
-    Vc = Vcmax * f_temp * CO2/(CO2+Kco2*(1.0d0+DO/Ko2))  &
-                        * RuBPn/(RuBPn+Krupb)
+    f_temp = exp(Ea*((TK-298.15d0)/298.15d0/Rg/(TK+25.d0)))* &
+              (1.0d0+exp((298.15d0*dS-dH)/Rg/298.15d0))/(1.0d0+exp((TK*dS-dH)/Rg/TK))
+
+    Kco2 = 404.9d-1*exp(79430.0d0*cff)  !! Bernacchi et al. 2001
+    Ko2  = 500.d-1*exp(36380.0d0*cff)  !! Bernacchi et al. 2001
+    
+    Vc = Vcmax * f_temp * CO2/(CO2+Kco2*(1.0d0+DO/Ko2)) 
+    ! &
+    !                     * RuBPn/(RuBPn+Krupb)
 !    Vo = Vomax*f_temp*DO/(DO+Ko2*(1.0d0+CO2/Kco2))
     phi = Vomax/Vcmax*(DO/Ko2)/(CO2/Kco2)
     Vo = phi*Vc
 
-    Pg = Vc - 0.5d0*Vo
+!---- Electrons that form ROS  (pmol ROS cell-1 s-1) ---
+    J_ep = min(J_ep_in, 4.d0*Vc+4.d0*Vo)
+    J_ee = max(J_ep_in-J_ep, 0.0d0)
+
+    ! Pg = Vc - 0.5d0*Vo　　!Wc（光十分、低CO2濃度
+    Pg = J_ep/4.d0 * (Vc-0.5d0*Vo)/(Vc+Vo)
      
 !---- Oxygen production rate  (pmol O2 cell-1 s-1) ---
     F_zDO = J_ep_in/4.0d0 - 0.5d0*Vo
 
-!---- Electrons that form ROS  (pmol ROS cell-1 s-1) ---
+!---- Electrons that form ROS  (pmol ROS cell-1 s-1) 上杉モデルにした後SODの計算を改良予定---
 !   NADP+ + H+ + 2 e- -> NADPH
-    F_NADPH = 0.5d0*J_ep_in * (1.0d0-NADPHn) 
+    ! F_NADPH = 0.5d0*J_ep_in * (1.0d0-NADPHn) 
 
-    F_RuBP = kphot*NADPHn*(1.0d0-RuBPn)
+    ! F_RuBP = kphot*NADPHn*(1.0d0-RuBPn)
 
 !   O2 + e- -> O2- 
     F_zSOx = NADPHn * J_ep_in
 
 !   Superoxide desimutaze (SOD)     
 !    2 O2- + 2 H+ -> H2O2 + O2
-    F_zROS = Vsoxmax * SOx/(Ksox + SOx)
+    F_zROS = Vsoxmax * SOx/(Ksox + SOx)!ukモデルとは意味合いが違う、これはスーパーオキシドから過酸化水素への変換速度
 
 !   DO flux (pmol O2 cell-1 s-1) 
     F_zDO = F_zDO - F_zSOx + F_zROS
@@ -2152,6 +2164,9 @@ CONTAINS
 !    QAa = QAt - ZOOX(ng)%QAi(n,i,j)
     QAa  = QAo + QAr
 
+!-----Total RCII -----------------
+    QAt  = QAa + QAi
+    
 !---- Photoinihibition rate of QAa to QAi  (pmol RCII cell-1 s-1) ---
     Ja2i = ki*PFDsurf * QAa
 !    Ja2i = 0.0d0  ! No photidamage case
@@ -2162,7 +2177,7 @@ CONTAINS
     Ji2a = ka * QAi * exp(-kros2*ROS) * tanh(PFDsurf/50.0d0)  !!! ROS concentration dependent repair
 
 ! ----- QAa production rate (pmol RCII cell-1 s-1) -------
-    F_QAp = kqap * (1.0d0-QCzr/QCzrm)
+    F_QAp = kqap * (1.0d0-QCzr/QCzrm) 
 
 !===== Time step progressing ================================================
 
