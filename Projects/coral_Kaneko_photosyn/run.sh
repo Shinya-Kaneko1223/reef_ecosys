@@ -16,7 +16,7 @@ gfortran ${FFLAGS} \
   ${SRC_DIR}/mod_heat.F \
   ${SRC_DIR}/mod_decomposition.F \
   ${SRC_DIR}/mod_foodweb.F \
-  ${SRC_DIR}/mod_coral.F \
+  ${SRC_DIR}/mod_coral_kk1.0.F \
   ${SRC_DIR}/mod_macroalgae.F \
   ${SRC_DIR}/mod_seagrass.F \
   ${SRC_DIR}/mod_sedecosys.F \
