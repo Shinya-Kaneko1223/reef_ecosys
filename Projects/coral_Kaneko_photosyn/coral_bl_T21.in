@@ -81,8 +81,8 @@
 &output   
 
 !  OUTFILE_prefix = 'output/L150/coral_bl_T21_L150'
-!  OUTFILE_prefix = 'output/L400/coral_bl_T21_L400'
-  OUTFILE_prefix = 'output/L800/coral_bl_T21_L800'
+  OUTFILE_prefix = 'output/L400/coral_bl_T21_L400'
+!  OUTFILE_prefix = 'output/L800/coral_bl_T21_L800'
 /
 
 !--- Initial Condition -----------------------------------------------------

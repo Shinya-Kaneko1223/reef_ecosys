@@ -2044,7 +2044,7 @@ CONTAINS
     real(8), parameter :: arb = 0.55d0    ! (K-1) estimated from Lilley et al. (2010)
     real(8), parameter :: e2o = 0.25d0    ! Yield of O2 per electron (mol O2 (mol e-)-1) 2H2O -> 4e- +4H+ + O2 
     real(8), parameter :: o2c = 1.0d0     ! Photosynthetic quotient (mol O2 (mol CO2)-1) !!!Assumed
-    real(8), parameter :: e2c = e2o*o2c   ! (mol C (mol e-)-1)
+    real(8), parameter :: e2c = e2o*o2c   ! (mol C (mol e-)-1)←ここまで先生のやつと初期値一緒
 
     !   ---- RubisCO activity related parameters -----------------
     real(8), parameter :: Vcmax= 1.5d-4   ! maximum carboxylation rate (pmol cell-1 s-1) !!! Tuning !!! uk edit  !!uktn
