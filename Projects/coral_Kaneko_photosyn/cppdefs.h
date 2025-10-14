@@ -52,8 +52,8 @@
 /*#  define CORAL_MUCUS*/           /*Mucus release from coral */
 /*#  define CORAL_INGESTION*/
 /*#  define CORAL_NONE_CO2_EQ*/
-/*#  define CORAL_NUTRIENTS*/
-/*#  define CORAL_SIZE_DYNAMICS*/
+#  define CORAL_NUTRIENTS
+#  define CORAL_SIZE_DYNAMICS
 /*#  define CORAL_BORON_ISOTOPE*/
 # endif
 
@@ -101,8 +101,8 @@
 
 /*#define USE_HEAT*/
 /*#define LONGWAVE_IN*/
-/*#define INPUT_BOTTOM_PFD*/
-#define ANA_SWRAD_ZILLMAN
+#define INPUT_BOTTOM_PFD
+/*#define ANA_SWRAD_ZILLMAN←モデルが安定したらONにする*/
 
 /*#define REEF_FLOW*/
 

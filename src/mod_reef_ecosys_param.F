@@ -96,6 +96,9 @@ MODULE mod_reef_ecosys_param
 !  real(8), parameter :: rNCz(1)  = [ 16d0/300d0 ]    ! (no dim.) Zoo  N:C ratio  !! For mass balance test
 !  real(8), parameter :: rPCz(1)  = [  1d0/300d0 ]    ! (no dim.) Zoo  P:C ratio  !! For mass balance test
 
+! --- C:N:P Stoichiometry Parameters --- !!!!!!!!!!ks additional part
+  integer, parameter :: nC = 1, nN = 2, nP = 3
+  real(8), parameter :: c_CNP(3) = [ 106.0d0, 16.0d0, 1.0d0 ]
 
 ! ==== SEDECOSYS MODEL PARAMETER SETTINGS ===========================================================
 
@@ -126,7 +129,6 @@ MODULE mod_reef_ecosys_param
 ! ==== OYSTER MODEL PARAMETER SETTINGS ===========================================================
 
   integer, parameter :: Noy = 1    !! Number of oyster groups
-
 
 END MODULE mod_reef_ecosys_param
 

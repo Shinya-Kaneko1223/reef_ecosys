@@ -564,6 +564,8 @@ CONTAINS
     real(8) :: rCO2cal(N_Csp)
     real(8) :: rCO2coe(N_Csp)
     real(8) :: rCO2amb(N_Csp)
+    real(8) :: rNH4amb(N_Nsp)
+    real(8) :: rPO4coe(N_Psp)
 # if defined CORAL_INGESTION
     real(8) :: rZooC(N_Csp,Nzoo)
 # endif
@@ -572,7 +574,6 @@ CONTAINS
     real(8) :: rNO3coe(N_Nsp)
     real(8) :: rNO3amb(N_Nsp)
     real(8) :: rNH4coe(N_Nsp)
-    real(8) :: rNH4amb(N_Nsp)
     real(8) :: rQN(N_Nsp)
     real(8) :: rPO4amb(N_Psp)
     real(8) :: rQP(N_Psp)
@@ -582,8 +583,10 @@ CONTAINS
 #  endif
 # endif
 
-!--- Other variables -------------------------------------------
+!--- Other variables ------------------------------------!!!!!!kk addtion part 種類分けして整理する
     real(8) :: Rc, Rz
+    real(8) :: c_SQC, c_SQN, c_SQP, tempb ! 栄養バランスを保持した状態でのc,n,pの取り込む物質量
+    real(8) :: km_CNP, am_cnp !栄養失調での死亡率
 !    real(8) :: Si   !Mass transfer coefficient (cm s-1)
     real(8) :: Si_DIC(N_Csp), Si_TA, Si_DO   !Mass transfer coefficient (cm s-1)
 # if defined CORAL_INGESTION
@@ -950,14 +953,16 @@ CONTAINS
 
 ! Coral carbon cell quoto
 
-    c_SQC=min((Flux_NH4 +Flux_NO3 )*c_CNP(nC)/c_CNP(nN)
-                 ,Flux_PO4 *c_CNP(nC)/c_CNP(nP))
+    c_SQC=min((Flux_NH4(iNt) +Flux_NO3(iNt))*c_CNP(nC)/c_CNP(nN),&
+                Flux_PO4(iPt) *c_CNP(nC)/c_CNP(nP))
 
-    c_SQC=CORAL(ng)%QC(n,i,j)/(1000.+CORAL(ng)%QC(n,i,j))*c_SQC
+    c_SQC=CORAL(ng)%QC(iCt,n,i,j)/(1000.d0+CORAL(ng)%QC(iCt,n,i,j))*c_SQC
     c_SQN=c_SQC*c_CNP(nN)/c_CNP(nC)
+
+    
     c_SQP=c_SQC*c_CNP(nP)/c_CNP(nC)
 
-    tempb=Flux_NH4 /(Flux_NH4 +Flux_NO3 )*c_SQN
+    tempb=Flux_NH4(iNt) /(Flux_NH4(iNt) +Flux_NO3(iNt) )*c_SQN
     Flux_NO3 =Flux_NO3 /(Flux_NH4 +Flux_NO3 )*c_SQN
     Flux_NH4 =tempb
     Flux_PO4 =c_SQP
@@ -1206,13 +1211,13 @@ CONTAINS
 
 #  if defined CORAL_NUTRIENTS
 
-    F_Cgrowth = g_max(n)*min( 1.0d0 - QC0(n)/CORAL(ng)%QC(iCt,n,i,j) ,    &
+    F_Cgrowth = g_max(n)*min(1.0d0 - QC0(n)/CORAL(ng)%QC(iCt,n,i,j) ,    &
                           min(1.0d0 - QN0(n)/CORAL(ng)%QN(iNt,n,i,j),     &
                               1.0d0 - QP0(n)/CORAL(ng)%QP(iPt,n,i,j) ) )  &
     F_Cgrowth = max(F_Cgrowth, 0.0d0)
     
-    F_Ngrowth = F_Cgrowth*CORAL(ng)%QN(n,i,j)/CORAL(ng)%QC(iCt,n,i,j)
-    F_Pgrowth = F_Cgrowth*CORAL(ng)%QP(n,i,j)/CORAL(ng)%QC(iCt,n,i,j)
+    F_Ngrowth = F_Cgrowth*CORAL(ng)%QN(iNt,n,i,j)/CORAL(ng)%QC(iCt,n,i,j)
+    F_Pgrowth = F_Cgrowth*CORAL(ng)%QP(iPt,n,i,j)/CORAL(ng)%QC(iCt,n,i,j)
 
 #  else
 !    F_Cgrowth = g_max(n) * (1.0d0 - QC0(n)/CORAL(ng)%QC(n,i,j) )
@@ -1962,10 +1967,10 @@ CONTAINS
        , F_Zelm, Repro*ZOOX(ng)%dens(n,i,j), Morta*ZOOX(ng)%dens(n,i,j)  &
 #   if defined CORAL_NUTRIENTS
        , ZOOX(ng)%QN(iNt,n,i,j), ZOOX(ng)%QP(iPt,n,i,j)                  &
-       , N_repro, P_repro                                                &
-       , ZOOX(ng)%NO3(iNt,n,i,j), ZOOX(ng)%NH4(iNt,n,i,j), F_ONOO        &
-       , NO3_trans, NH4_trans,NO3_reduc, N_assim, N_dissim               &
-       , ZOOX(ng)%PO4(iPt,n,i,j), PO4_trans, P_assim                     &
+!       , N_repro, P_repro                                                & ROSモデル開発が進み次第必要なものだけ使用
+!       , ZOOX(ng)%NO3(iNt,n,i,j), ZOOX(ng)%NH4(iNt,n,i,j), F_ONOO        &
+!       , NO3_trans, NH4_trans,NO3_reduc, N_assim, N_dissim               &
+!       , ZOOX(ng)%PO4(iPt,n,i,j), PO4_trans, P_assim                     &
 #   endif
        , CORAL(ng)%ROS(n,i,j), CORAL(ng)%ROS(n,i,j)*V_zoox*1.0d3         &
        , ZOOX(ng)%dens(n,i,j)*ZOOX(ng)%Chl(n,i,j)*1.0d-6
@@ -2041,7 +2046,7 @@ CONTAINS
 !    real(8), parameter :: arb = 0.55d0    ! (K-1) estimated from Lilley et al. (2010)
     real(8), parameter :: e2o = 0.25d0    ! Yield of O2 per electron (mol O2 (mol e-)-1) 2H2O -> 4e- +4H+ + O2 
     real(8), parameter :: o2c = 1.0d0     ! Photosynthetic quotient (mol O2 (mol CO2)-1) !!!Assumed
-    real(8), parameter :: e2c = e2o*o2c   ! (mol C (mol e-)-1)←ここまで先生のやつと初期値一緒
+    real(8), parameter :: e2c = e2o*o2c   ! (mol C (mol e-)-1)
 
     !   ---- RubisCO activity related parameters -----------------
     real(8), parameter :: Vcmax = 1.5d-4   ! maximum carboxylation rate (pmol cell-1 s-1) !!! Tuning
@@ -2098,6 +2103,9 @@ CONTAINS
     real(8) :: F_zSOx   ! Flux of Superoxide (O2-) from photosystem (pmol cell-1 s-1)
     real(8) :: F_NADPH  ! Flux of normalized NADPH (s-1)
     real(8) :: F_RuBP   ! Flux of normalized RuBP (s-1)
+    real(8) :: F_ONOO   ! Flux of ペルオキシナイトライト
+    real(8) :: n_assim, n_dissim, n_repro, p_repro  ! for Nutrient, Coral Size dynamics
+    real(8) :: no3_trans, nh4_trans, no3_reduc, p_assim ! for Nutrient, Coral Size dynamics
 !    real(8) :: phi      ! Vo/Vc
     real(8) :: cff      ! for easy cal
 #  if defined CORAL_TESTMODE
