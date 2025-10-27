@@ -18,7 +18,7 @@
   Jm = 1
   N  = 1
 
-  dt = 0.5d0 ! Time step (sec)
+  dt = 0.0005d0 ! Time step (sec)
 
   depth = 1.0d0 ! Set depth (m)
 

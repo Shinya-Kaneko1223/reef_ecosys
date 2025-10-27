@@ -52,8 +52,8 @@
 /*#  define CORAL_MUCUS*/           /*Mucus release from coral */
 /*#  define CORAL_INGESTION*/
 /*#  define CORAL_NONE_CO2_EQ*/
-#  define CORAL_NUTRIENTS
-#  define CORAL_SIZE_DYNAMICS
+/*#  define CORAL_NUTRIENTS
+/*#  define CORAL_SIZE_DYNAMICS
 /*#  define CORAL_BORON_ISOTOPE*/
 # endif
 

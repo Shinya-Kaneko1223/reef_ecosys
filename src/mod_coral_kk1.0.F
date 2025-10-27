@@ -940,7 +940,6 @@ CONTAINS
     Flux_TA  = Si_TA *(TAamb-CORAL(ng)%TAcoe(n,i,j))*rho_sw
 ! DO uptake (nmol cm-2 s-1)
     Flux_DO  = Si_DO *(DOamb-CORAL(ng)%DOcoe(n,i,j))
-
 !----- Summing Fluxes (nmol cm-2 s-1)--------------------------
     F_TAcoe = F_TAcoe + Flux_TA
     F_DOcoe = F_DOcoe + Flux_DO
@@ -952,6 +951,7 @@ CONTAINS
 # if defined CORAL_NUTRIENTS
 
 ! Coral carbon cell quoto
+
 
     c_SQC=min((Flux_NH4(iNt) +Flux_NO3(iNt))*c_CNP(nC)/c_CNP(nN),&
                 Flux_PO4(iPt) *c_CNP(nC)/c_CNP(nP))
@@ -1062,8 +1062,7 @@ CONTAINS
 
     F_Zelm  = k_Zelm(n) * CORAL(ng)%ROS(n,i,j)*ZOOX(ng)%dens(n,i,j)
 !    F_Zelm  = 0.0d0
-    
-!----- Zooxanthellae internal model -----
+    !----- Zooxanthellae internal model -----
 
     CALL zooxanthellae             &
 !     input parameters
@@ -1211,9 +1210,10 @@ CONTAINS
 
 #  if defined CORAL_NUTRIENTS
 
-    F_Cgrowth = g_max(n)*min(1.0d0 - QC0(n)/CORAL(ng)%QC(iCt,n,i,j) ,    &
-                          min(1.0d0 - QN0(n)/CORAL(ng)%QN(iNt,n,i,j),     &
-                              1.0d0 - QP0(n)/CORAL(ng)%QP(iPt,n,i,j) ) )  &
+    F_Cgrowth = g_max(n)*min( 1.0d0 - QC0(n)/CORAL(ng)%QC(iCt,n,i,j) ,      &
+                       min(1.0d0 - QN0(n)/CORAL(ng)%QN(iNt,n,i,j),      &
+                           1.0d0 - QP0(n)/CORAL(ng)%QP(iPt,n,i,j) ) )
+
     F_Cgrowth = max(F_Cgrowth, 0.0d0)
     
     F_Ngrowth = F_Cgrowth*CORAL(ng)%QN(iNt,n,i,j)/CORAL(ng)%QC(iCt,n,i,j)
@@ -1229,7 +1229,7 @@ CONTAINS
 !
 !---------- Coral growth rate (cm cm-2 s-1) ------------
 !
-    CORAL(ng)%growth(n,i,j) = F_Cgrowth/CORAL(ng)%QC(iCt,n,i,j)*1.0d-3  ! growth rate (cm2 cm-2 s-1)
+    CORAL(ng)%growth(n,i,j) = F_Cgrowth(iCt)/CORAL(ng)%QC(iCt,n,i,j)*1.0d-3  ! growth rate (cm2 cm-2 s-1)
 !   (cm2 cm-2 s-1)=(nmol cm-2 s-1)/(umol cm-2)*1.d-3
 !
 !---------- Coral mortality (cm cm-2 s-1) ------------
@@ -1468,40 +1468,40 @@ CONTAINS
       else
         dsec=dsec+CORAL_OUTPUT_INTERVAL*60.0d0
       endif
-       
-      write(10+n,'(*(g0:,", "))') date, PFD                                      &
-       , CORAL(ng)%Pg(n,i,j), CORAL(ng)%R (n,i,j)                                &
-       , CORAL(ng)%Pg(n,i,j)-CORAL(ng)%R (n,i,j)                                 &
-       , CORAL(ng)%G (n,i,j), CORAL(ng)%QC(iCt,n,i,j)                            &
-       , CORAL(ng)%TAcal(n,i,j), CORAL(ng)%TAcoe(n,i,j),TAamb                    &
-       , CORAL(ng)%DICcal(iCt,n,i,j), CORAL(ng)%DICcoe(iCt,n,i,j),DICamb(iCt)    &
-       , CORAL(ng)%DOcoe(n,i,j), DOamb                                           &
-       , pHcal, pHcoe, pHamb, Wargcal, Wargamb                                   &
-       , fCO2cal, fCO2coe, fCO2amb                                               &
-       , CORAL(ng)%CO2cal(iCt,n,i,j), HCO3cal(iCt),CO3cal(iCt)                   &
-       , CORAL(ng)%CO2coe(iCt,n,i,j), HCO3coe(iCt),CO3coe(iCt)                   &
-#  if defined CARBON_ISOTOPE
-       , d13C_DICamb, d13C_CO2amb, d13C_HCO3amb, d13C_CO3amb                     &
-       , d13C_DICcoe, d13C_CO2coe, d13C_HCO3coe, d13C_CO3coe                     &
-       , d13C_DICcal, d13C_CO2cal, d13C_HCO3cal, d13C_CO3cal                     &
-       , d13C_QC, d13C_G                     &
-#  endif
-#  if defined CORAL_ZOOXANTHELLAE
-! TODO アウトプット未検討
-       , CORAL(ng)%ROS(n,i,j), Rz, F_Csec, F_zROS, F_detox, F_dam                &
-#  endif
-#  if defined CORAL_BORON_ISOTOPE
-       , d11Barg                                                                 &
-#  endif
-       , Flux_DOC(iCt,:)                                                           &
-#  if defined CORAL_INGESTION
-       , Flux_ZooC(iCt,:)                                                          &
-#  endif
-#  if defined CORAL_SIZE_DYNAMICS
-       , CORAL(ng)%growth(n,i,j), CORAL(ng)%mort(n,i,j)                          &
-       , Damage,F_Cgrowth                                                  &
-#  endif
-       , E_ca, F_Cgrowth, Si_DIC(iCt), Si_DO
+    !   write(10+n,'(*(g0:,", "))') date, PFD                                      &
+    !    , CORAL(ng)%Pg(n,i,j), CORAL(ng)%R (n,i,j)                                &
+    !    , CORAL(ng)%Pg(n,i,j)-CORAL(ng)%R (n,i,j)                                 &
+    !    , CORAL(ng)%G (n,i,j), CORAL(ng)%QC(iCt,n,i,j)                            &
+    !    , CORAL(ng)%TAcal(n,i,j), CORAL(ng)%TAcoe(n,i,j),TAamb                    &
+    !    , CORAL(ng)%DICcal(iCt,n,i,j), CORAL(ng)%DICcoe(iCt,n,i,j),DICamb(iCt)    &
+    !    , CORAL(ng)%DOcoe(n,i,j), DOamb                                           &
+    !    , pHcal, pHcoe, pHamb, Wargcal, Wargamb                                   &
+    !    , fCO2cal, fCO2coe, fCO2amb                                               &
+    !    , CORAL(ng)%CO2cal(iCt,n,i,j), HCO3cal(iCt),CO3cal(iCt)                   &
+    !    , CORAL(ng)%CO2coe(iCt,n,i,j), HCO3coe(iCt),CO3coe(iCt)                   &
+! #  if defined CARBON_ISOTOPE
+!        , d13C_DICamb, d13C_CO2amb, d13C_HCO3amb, d13C_CO3amb                     &
+!        , d13C_DICcoe, d13C_CO2coe, d13C_HCO3coe, d13C_CO3coe                     &
+!        , d13C_DICcal, d13C_CO2cal, d13C_HCO3cal, d13C_CO3cal                     &
+!        , d13C_QC, d13C_G                     &
+! #  endif
+! #  if defined CORAL_ZOOXANTHELLAE
+! ! TODO アウトプット未検討
+!        , CORAL(ng)%ROS(n,i,j), Rz, F_Csec, F_zROS, F_detox, F_dam                &
+! #  endif
+! #  if defined CORAL_BORON_ISOTOPE
+!        , d11Barg                                                                 &
+! #  endif
+!        , Flux_DOC(iCt,:)                                                           &
+! #  if defined CORAL_INGESTION
+!        , Flux_ZooC(iCt,:)                                                          &
+! #  endif
+! #  if defined CORAL_SIZE_DYNAMICS
+!        , CORAL(ng)%growth(n,i,j), CORAL(ng)%mort(n,i,j)                          &
+!        , Damage,F_Cgrowth                                                  &
+! #  endif
+!        , E_ca, F_Cgrowth, Si_DIC(iCt), Si_DO
+      write(10+n, *) date, PFD, CORAL(ng)%Pg(n,i,j), CORAL(ng)%R(n,i,j)
     END IF
 
 ! Coral record calculation section
