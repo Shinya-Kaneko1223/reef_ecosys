@@ -1105,7 +1105,7 @@ CONTAINS
       , Rz                         & ! Total respiration rate (nmol cm-2 s-1)
       )
 
-
+      
 !======================================================================
 # else
 !  ----- Gross photosynthetic rate (nmolC cm-2 s-1) ------------------------------------
@@ -1145,6 +1145,7 @@ CONTAINS
 
     Rc = Rmax(n) * f_temp * f_min
     CORAL(ng)%R(n,i,j) = Rc + Rz
+    ! print *, 'Rc=', Rc, ' Rz=', Rz, ' DOcoe=', CORAL(ng)%DOcoe(n,i,j), ' QCcr=', QCcr
 
 !----- Summing Fluxes (nmol cm-2 s-1)--------------------------
     F_DOcoe = F_DOcoe - Rc
@@ -1468,40 +1469,40 @@ CONTAINS
       else
         dsec=dsec+CORAL_OUTPUT_INTERVAL*60.0d0
       endif
-    !   write(10+n,'(*(g0:,", "))') date, PFD                                      &
-    !    , CORAL(ng)%Pg(n,i,j), CORAL(ng)%R (n,i,j)                                &
-    !    , CORAL(ng)%Pg(n,i,j)-CORAL(ng)%R (n,i,j)                                 &
-    !    , CORAL(ng)%G (n,i,j), CORAL(ng)%QC(iCt,n,i,j)                            &
-    !    , CORAL(ng)%TAcal(n,i,j), CORAL(ng)%TAcoe(n,i,j),TAamb                    &
-    !    , CORAL(ng)%DICcal(iCt,n,i,j), CORAL(ng)%DICcoe(iCt,n,i,j),DICamb(iCt)    &
-    !    , CORAL(ng)%DOcoe(n,i,j), DOamb                                           &
-    !    , pHcal, pHcoe, pHamb, Wargcal, Wargamb                                   &
-    !    , fCO2cal, fCO2coe, fCO2amb                                               &
-    !    , CORAL(ng)%CO2cal(iCt,n,i,j), HCO3cal(iCt),CO3cal(iCt)                   &
-    !    , CORAL(ng)%CO2coe(iCt,n,i,j), HCO3coe(iCt),CO3coe(iCt)                   &
-! #  if defined CARBON_ISOTOPE
-!        , d13C_DICamb, d13C_CO2amb, d13C_HCO3amb, d13C_CO3amb                     &
-!        , d13C_DICcoe, d13C_CO2coe, d13C_HCO3coe, d13C_CO3coe                     &
-!        , d13C_DICcal, d13C_CO2cal, d13C_HCO3cal, d13C_CO3cal                     &
-!        , d13C_QC, d13C_G                     &
-! #  endif
-! #  if defined CORAL_ZOOXANTHELLAE
-! ! TODO アウトプット未検討
-!        , CORAL(ng)%ROS(n,i,j), Rz, F_Csec, F_zROS, F_detox, F_dam                &
-! #  endif
-! #  if defined CORAL_BORON_ISOTOPE
-!        , d11Barg                                                                 &
-! #  endif
-!        , Flux_DOC(iCt,:)                                                           &
-! #  if defined CORAL_INGESTION
-!        , Flux_ZooC(iCt,:)                                                          &
-! #  endif
-! #  if defined CORAL_SIZE_DYNAMICS
-!        , CORAL(ng)%growth(n,i,j), CORAL(ng)%mort(n,i,j)                          &
-!        , Damage,F_Cgrowth                                                  &
-! #  endif
-!        , E_ca, F_Cgrowth, Si_DIC(iCt), Si_DO
-      write(10+n, *) date, PFD, CORAL(ng)%Pg(n,i,j), CORAL(ng)%R(n,i,j)
+      write(10+n,'(*(g0:,", "))') date, PFD                                      &
+       , CORAL(ng)%Pg(n,i,j), CORAL(ng)%R (n,i,j)                                &
+       , CORAL(ng)%Pg(n,i,j)-CORAL(ng)%R (n,i,j)                                 &
+       , CORAL(ng)%G (n,i,j), CORAL(ng)%QC(iCt,n,i,j)                            &
+       , CORAL(ng)%TAcal(n,i,j), CORAL(ng)%TAcoe(n,i,j),TAamb                    &
+       , CORAL(ng)%DICcal(iCt,n,i,j), CORAL(ng)%DICcoe(iCt,n,i,j),DICamb(iCt)    &
+       , CORAL(ng)%DOcoe(n,i,j), DOamb                                           &
+       , pHcal, pHcoe, pHamb, Wargcal, Wargamb                                   &
+       , fCO2cal, fCO2coe, fCO2amb                                               &
+       , CORAL(ng)%CO2cal(iCt,n,i,j), HCO3cal(iCt),CO3cal(iCt)                   &
+       , CORAL(ng)%CO2coe(iCt,n,i,j), HCO3coe(iCt),CO3coe(iCt)                   &
+       , F_DOcoe, F_DICcoe(iCt)                                                  &
+#  if defined CARBON_ISOTOPE
+       , d13C_DICamb, d13C_CO2amb, d13C_HCO3amb, d13C_CO3amb                     &
+       , d13C_DICcoe, d13C_CO2coe, d13C_HCO3coe, d13C_CO3coe                     &
+       , d13C_DICcal, d13C_CO2cal, d13C_HCO3cal, d13C_CO3cal                     &
+       , d13C_QC, d13C_G                     &
+#  endif
+#  if defined CORAL_ZOOXANTHELLAE
+! TODO アウトプット未検討
+       , CORAL(ng)%ROS(n,i,j), Rz, F_Csec, F_zROS, F_detox, F_dam                &
+#  endif
+#  if defined CORAL_BORON_ISOTOPE
+       , d11Barg                                                                 &
+#  endif
+       , Flux_DOC(iCt,:)                                                           &
+#  if defined CORAL_INGESTION
+       , Flux_ZooC(iCt,:)                                                          &
+#  endif
+#  if defined CORAL_SIZE_DYNAMICS
+       , CORAL(ng)%growth(n,i,j), CORAL(ng)%mort(n,i,j)                          &
+       , Damage,F_Cgrowth                                                  &
+#  endif
+       , E_ca, F_Cgrowth, Si_DIC(iCt), Si_DO
     END IF
 
 ! Coral record calculation section
@@ -2264,7 +2265,7 @@ CONTAINS
        , QAt, QAa, FvFm, YII, J_ep_in                               &
        , Ji2a, Ja2i, kr2o, s_ab, F_zSOx, SOx                          &
        , Pg, J_ep_in*e2c, Vc, Vo, F_zDO                       &
-       , Chl, cCO2, cDO, F_QAp, NADPHn, RuBPn, F_zROS, ROS
+       , Chl, cDO, cCO2, F_QAp, NADPHn, RuBPn, F_zROS, ROS
       
     END IF
 #  endif

@@ -607,13 +607,12 @@ END SUBROUTINE files_close
        ,'fCO2cal','fCO2coe','fCO2amb'                        &
        ,'CO2aqcal','HCO3cal','CO3cal'                        &
        ,'CO2aqcoe','HCO3coe','CO3coe'                        &
+       ,'F_DOcoe', 'F_DICcoe'                                &
 # if defined CORAL_CARBON_ISOTOPE
-       ,'d13C_DICamb','d13C_DICcoe','d13C_QC','d13C_DICcal'  &
-       ,'d13C_arg','d13C_argxGn'                             &
-       ,'d13C_CO2aqcal','d13C_HCO3cal','d13C_CO3cal'         &
-       ,'d13C_CO2aqcoe','d13C_HCO3coe','d13C_CO3coe'         &
-       ,'c13CO2aqcal','cH13CO3cal','c13CO3cal'               &
-       ,'c13CO2aqcoe','cH13CO3coe','c13CO3coe'               &
+       ,'d13C_DICamb', 'd13C_CO2amb', 'd13C_HCO3amb', 'd13C_CO3amb' & 
+       ,'d13C_DICcoe', 'd13C_CO2coe', 'd13C_HCO3coe', 'd13C_CO3coe' & 
+       ,'d13C_DICcal', 'd13C_CO2cal', 'd13C_HCO3cal', 'd13C_CO3cal' & 
+       ,'d13C_QC', 'd13C_G'                                        &
 # endif
 # if defined CORAL_ZOOXANTHELLAE
        ,'ROS','Rz', 'F_Csec', 'F_ROS','F_detox','F_dam'      &
@@ -621,14 +620,14 @@ END SUBROUTINE files_close
 # if defined CORAL_BORON_ISOTOPE
        ,'d11Barg'                                            &
 # endif
-       ,'DOCuptake'                                          &
+       ,'Flux_LDOC', 'Flux_RDOC'                            &
 # if defined CORAL_INGESTION
-       ,'ZOOuptake'                                          &
+       ,'Flux_ZooC'                                          &
 # endif
 # if defined CORAL_SIZE_DYNAMICS
        ,'growth','mort','Damage','F_Cgrowth'                 &
 # endif
-       ,'E_ca','F_Cgrowth','Si_DIC','Si_DIC'
+       ,'E_ca','F_Cgrowth','Si_DIC','Si_DO'
 
     RETURN
 
@@ -705,9 +704,9 @@ END SUBROUTINE write_crl_ave_lavel
         'time','PFD','Tamb'                                     &
        ,'QAo','QAr','QAi'                                       &
        ,'QAt','QAa','Fv/Fm','Y(II)','J_ep_in'                   &
-       ,'Ji2a','Ja2i','kr','s_ab','F_zSOx','SOx'                &
-       ,'Pg','Pgcal','Vc','Vo','phi','F_zDO'                    &
-       ,'Chl','CO2','DO','F_QAp','NADPH','RuBP','F_zROS','ROS'
+       ,'Ji2a','Ja2i','kr2o','s_ab','F_zSOx','SOx'                &
+       ,'Pg', 'J_ep_in*e2c', 'Vc', 'Vo', 'F_zDO'                       &
+       ,'Chl','cDO','cCO2','F_QAp','NADPHn','RuBPn','F_zROS','ROS'
      
     RETURN
 
