@@ -465,7 +465,7 @@ CONTAINS
 
                                              !!! * Nakamura et al. 2013 setting; ** New setting
 
-    real(8), parameter :: Rmax(2)   = [ 0.05d0, 0.05d0 ] !!!0.53d0*  0.37d0** !Maximum respiration rate (nmol O2 cm-2 s-1) *Tuned using Kuhl et al (1995), Al-Horani et al. (2003) data
+    real(8), parameter :: Rmax(2)   = [ 0.10d0, 0.10d0 ] !!!0.53d0*  0.37d0** !Maximum respiration rate (nmol O2 cm-2 s-1) *Tuned using Kuhl et al (1995), Al-Horani et al. (2003) data
     real(8), parameter :: K_QC(2)   = [ 100.d0, 100.d0 ]     !!!5.0d0* umol cm-2!!!
     real(8), parameter :: K_DO(2)   = [ 46.d0, 46.d0 ]   ! ca. 46 (umol kg-1) Newton & Atkinson (1991)
 
@@ -583,7 +583,7 @@ CONTAINS
 #  endif
 # endif
 
-!--- Other variables ------------------------------------!!!!!!kk addtion part 種類分けして整理する
+!--- Other variables ------------------------------------!!!!!!種類分けして整理
     real(8) :: Rc, Rz
     real(8) :: c_SQC, c_SQN, c_SQP, tempb ! 栄養バランスを保持した状態でのc,n,pの取り込む物質量
     real(8) :: km_CNP, am_cnp !栄養失調での死亡率
@@ -911,7 +911,7 @@ CONTAINS
 !    Si_DO =(65.7d0*tau_amb**0.4d0+4.7d0)*1.d-4
     Si_DIC(:)=S_i(tau_amb,dif_HCO3,340.0d0,1.05d0)*1.0d2
     Si_TA =S_i(tau_amb,dif_HCO3,340.0d0,1.05d0)*1.0d2
-    Si_DO =S_i(tau_amb,dif_O2  ,340.0d0,1.05d0)*1.0d2
+    Si_DO =S_i(tau_amb,dif_O2,340.0d0,1.05d0)*1.0d2
 # if defined CORAL_INGESTION
     Si_PHY(:)=(65.7d0*tau_amb**0.4d0+4.7d0)*1.d-4
     Si_ZOO(:)=(65.7d0*tau_amb**0.4d0+4.7d0)*1.d-4
@@ -1685,9 +1685,9 @@ CONTAINS
     real(8), parameter :: V_zoox = 5.0d-10   ! Volume of zooxanthellae (cm3/cells) ~300 um3 (Fujise et al. 2018)
                              ! ~500 um3 =5.e-10 cm3 (e.g. Jone 1997; Jones and Yellowlees 1997)
 !----- Respitration constants ---------------------------
-    real(8), parameter :: Rzmax  = 5.0d-6  ! Maximum respiration rate (pmol cell-1 s-1)
+    real(8), parameter :: Rzmax  = 2.0d-3  ! Maximum respiration rate (pmol cell-1 s-1)
                                            ! ~0.1 (pmol cell-1 h-1) = 2.8d-5 (pmol cell-1 s-1) (Suggett et al., 2008)
-    real(8), parameter :: K_QCzr = 50.0d0   ! (pmolC cell-1) (Asssumed)
+    real(8), parameter :: K_QCzr = 30.0d0   ! (pmolC cell-1) (Asssumed)
     real(8), parameter :: K_DO   = 5.d0    ! ca. 10 (umolO2 kg-1) Shick et al. (1990) *Tuned value
 
     real(8), parameter :: p2r   = 0.5d0    ! molC respiration/(molC protain) required respiration rate for 1 molC biosynthesis
@@ -1696,7 +1696,7 @@ CONTAINS
 !----- C translocation constants ---------------------------
     real(8), parameter :: QC0 =  50.0d0    ! (pmolC/cell)  Minimal cell quota  ! 66 pmol/cell: Tanaka et al 2018;  600-1400 pgC cell-1: Muller-Parker et al., 1994)
     real(8), parameter :: QCm = 120.0d0    ! (pmolC/cell)  Maximum cell quota  ! 66 pmol/cell: Tanaka et al 2018;  600-1400 pgC cell-1: Muller-Parker et al., 1994)
-    real(8), parameter :: u_z2c = 1.0d-6   ! (s-1)  Cell-quota specific carbon translocation rate from zoox to host (Assumed)
+    real(8), parameter :: u_z2c = 2.0d-6   ! (s-1)  Cell-quota specific carbon translocation rate from zoox to host (Assumed)
     real(8), parameter :: u_c2z = 5.0d-7   ! (pmolC cell-1 (umol cm-2)-1 s-1)  Cell-quota specific carbon translocation rate from host to zoox (Assumed)
 
 !----- Chl dynamics constants ---------------------------
@@ -2080,7 +2080,8 @@ CONTAINS
     real(8), parameter :: kqap = 1.0d-11    ! rate constant for QAa production
     real(8), parameter :: QCzrm = 50.0d0    ! Threashold reserv QC value for Chl production 
     real(8), parameter :: uchl_max = 1.0d-4 ! Maximum Chl production rate (pg cell-1 s-1)  (Asssumed)
-    !real(8), parameter :: QAt = 1.2d-6      ! Total RCII (pmol RCII cell-1) 光阻害のところと関与しそうなので
+    real(8), parameter :: QAt = 1.2d-6      ! Total RCII (pmol RCII cell-1) 
+    real(8), parameter :: k_ros_eff = 0.05d0 !ROS production efficiency from J_ee (dimensionless)
 !---------------------------------------------------------------------
     real(8) :: QAt       ! Total RCII (pmol RCII cell-1)
     real(8) :: QAa       ! Active RCII (pmol RCII cell-1)
@@ -2141,24 +2142,30 @@ CONTAINS
 !    phi = Vomax/Vcmax*(cDO/Ko2)/(cCO2/Kco2)
 !    Vo = phi*Vc
 
-!---- Electrons that form ROS  (pmol ROS cell-1 s-1) ---
+    !---- Determine actual electron transport rate (J_ep) based on bottleneck ----
     J_ep = min(J_ep_in, 4.d0*Vc+4.d0*Vo)
+    !          (Supply, Demand)
+    ! J_ep: Actual ETR, limited by the smaller of Supply (light-driven) or Demand (Calvin cycle).
+
+    !---- Calculate excess electrons (J_ee) ----
     J_ee = max(J_ep_in-J_ep, 0.0d0)
+    !               (Excess, Zero)
+    ! J_ee: Electrons supplied but not used by Calvin cycle. Cannot be negative.
 
-    ! Pg = Vc - 0.5d0*Vo　　!Wc（光十分、低CO2濃度
     Pg = J_ep/4.d0 * (Vc-0.5d0*Vo)/(Vc+Vo)
-     
+
 !---- Oxygen production rate  (pmol O2 cell-1 s-1) ---
-    F_zDO = J_ep_in/4.0d0 - 0.5d0*Vo
+    F_zDO = (J_ep_in / 4.0d0)-Vo
 
-!---- Electrons that form ROS  (pmol ROS cell-1 s-1) ukモデルにした後SODの計算を改良予定---
+!---- Electrons that form ROS  (pmol ROS cell-1 s-1) ---
 !   NADP+ + H+ + 2 e- -> NADPH
-    ! F_NADPH = 0.5d0*J_ep_in * (1.0d0-NADPHn) 
+    F_NADPH = 0.5d0*J_ep_in * (1.0d0-NADPHn) 
 
-    ! F_RuBP = kphot*NADPHn*(1.0d0-RuBPn)
+    F_RuBP = kphot*NADPHn*(1.0d0-RuBPn)
 
 !   O2 + e- -> O2- 
-    F_zSOx = NADPHn * J_ep_in
+    F_zSOx = k_ros_eff * J_ep_in
+    ! F_zSOx = NADPHn * J_ep_in
 
 !   Superoxide desimutaze (SOD)     
 !    2 O2- + 2 H+ -> H2O2 + O2
@@ -2201,10 +2208,10 @@ CONTAINS
 !    s_ab = s_0*0.83d0*exp(-kros*ROS)  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !    s_ab = s_0*0.83d0
 !    s_ab = s_0*0.65d0
-    ! s_ab = s_0 * 0.80d0*exp(-kros*QAi/QAt) 9/1,Pgがマイナス、Vcが極端に低いため
-    ! ko2r = s_ab * Chl * phi_q * PFDsurf 9/1,Pgがマイナス、Vcが極端に低いため
-    s_ab = s_0*0.83d0
-    ko2r = s_ab * phi_q * PFDsurf
+    s_ab = s_0 * 0.80d0*exp(-kros*QAi/QAt)
+
+    ko2r = s_ab * Chl * phi_q * PFDsurf 
+
 !-----Reduced RCII -----------------
     QAr = ko2r/(ko2r+kr2o) * QAa
 
@@ -2227,8 +2234,7 @@ CONTAINS
 !-- RuBPn = RuBP/(0.5*PGA + RuBP) concentration (no unit, (pmol cell-1)/(pmol cell-1) ) -----------------
 !   Eq. (27) in Farquhar et al. (1980)
 !    RuBPn = 1.0d0 - (2.0d0+1.5d0*phi)*Vc/NADPHn/kphot
-!    RuBPn = RuBPn + ( F_RuBP - (2.0d0+1.5d0*phi)*Vc ) *dt
-    RuBPn = RuBPn + ( F_RuBP - (2.0d0+1.5d0*(Vo/Vc)*Vc *100.0d0 )) *dt
+    RuBPn = RuBPn + ( F_RuBP - (2.0d0+1.5d0*phi)*Vc ) *dt
 
 !-----Superoxide concentration (pmol cell-1) -----------------
 !   F_zSOx: O2 + e- -> O2- 
