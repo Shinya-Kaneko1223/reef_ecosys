@@ -633,7 +633,7 @@ CONTAINS
     real(8) :: F_Cwaste(N_Csp)
     real(8) :: F_Zelm
     real(8) :: F_Zmort
-    real(8) :: F_zDIC(N_Csp), F_zROS
+    real(8) :: F_zDIC(N_Csp), F_zH2O2
     real(8) :: F_detox
     real(8) :: F_dam
     real(8) :: F_cROS
@@ -1489,7 +1489,7 @@ CONTAINS
 #  endif
 #  if defined CORAL_ZOOXANTHELLAE
 ! TODO アウトプット未検討
-       , CORAL(ng)%ROS(n,i,j), Rz, F_Csec, F_zROS, F_detox, F_dam                &
+       , CORAL(ng)%ROS(n,i,j), Rz, F_Csec, F_zH2O2, F_detox, F_dam                &
 #  endif
 #  if defined CORAL_BORON_ISOTOPE
        , d11Barg                                                                 &
@@ -1726,7 +1726,7 @@ CONTAINS
 
 ! ----------------------------------------------------------
     real(8) :: F_zQC(N_Csp)
-    real(8) :: F_zROS, F_zCO2(N_Csp), F_zDO
+    real(8) :: F_zH2O2, F_zCO2(N_Csp), F_zDO
     real(8) :: F_zdens
     real(8) :: F_zPOC(N_Csp,Npom)
 #  if defined CORAL_NUTRIENTS
@@ -1771,7 +1771,7 @@ CONTAINS
     F_zQC (:) = 0.0d0
     F_zCO2(:) = 0.0d0
     F_zDO  = 0.0d0
-    F_zROS = 0.0d0
+    F_zH2O2 = 0.0d0
     F_zdens = F_Zelm
 #  if defined CORAL_NUTRIENTS
     F_zQN (:) = 0.0d0
@@ -1824,7 +1824,7 @@ CONTAINS
 !        output parameters
       , ZOOX(ng)%Pg(n,i,j)   & ! Gross photosynthetic rate (pmolC cell-1 s-1)
       , F_zDO                & ! Flux of DO  (pmol cell-1 s-1)
-      , F_zROS               & ! Flux of Superoxide (O2-) from photosystem (pmol cell-1 s-1)
+      , F_zH2O2               & ! Flux of Hydorogen peroxide (H2O2) from photosystem (pmol cell-1 s-1)
       )
       
 !----- CO2 fixation rate (pmol cell-1 s-1) ---------------------------
@@ -1906,7 +1906,7 @@ CONTAINS
 
 !  ----- Mass fluxes (nmol cm-2 s-1) ---------------------------
     F_DO  = F_DO  + F_zDO  * ZOOX(ng)%dens(n,i,j)*1.0d-3  !=(pmol cell-1 s-1)*(cell cm-1)*1.e-3=(nmol cm-2 s-1)
-    F_ROS = F_ROS + F_zROS * ZOOX(ng)%dens(n,i,j)*1.0d-3  !=(pmol cell-1 s-1)*(cell cm-1)*1.e-3=(nmol cm-2 s-1)
+    F_ROS = F_ROS + F_zH2O2 * ZOOX(ng)%dens(n,i,j)*1.0d-3  !=(pmol cell-1 s-1)*(cell cm-1)*1.e-3=(nmol cm-2 s-1)
 
     F_QC (:) = F_QC (:) + F_zQC (:) * ZOOX(ng)%dens(n,i,j)*1.0d-3  !=(pmol cell-1 s-1)*(cell cm-1)*1.e-3=(nmol cm-2 s-1)
     F_DIC(:) = F_DIC(:) + F_zCO2(:) * ZOOX(ng)%dens(n,i,j)*1.0d-3  !=(pmol cell-1 s-1)*(cell cm-1)*1.e-3=(nmol cm-2 s-1)
@@ -1964,7 +1964,7 @@ CONTAINS
        , ZOOX(ng)%Pg(n,i,j), ZOOX(ng)%R(n,i,j)                           &
        , ZOOX(ng)%Pg(n,i,j)-ZOOX(ng)%R(n,i,j), ZOOX(ng)%dens(n,i,j)      &
        , ZOOX(ng)%QC(iCt,n,i,j), ZOOX(ng)%Chl(n,i,j)                     &
-       , Cg_bio, Cn_bio, Repro, Morta, F_zROS,F_zQC(iCt)                 &
+       , Cg_bio, Cn_bio, Repro, Morta, F_zH2O2,F_zQC(iCt)                 &
        , F_Zelm, Repro*ZOOX(ng)%dens(n,i,j), Morta*ZOOX(ng)%dens(n,i,j)  &
 #   if defined CORAL_NUTRIENTS
        , ZOOX(ng)%QN(iNt,n,i,j), ZOOX(ng)%QP(iPt,n,i,j)                  &
@@ -2010,7 +2010,7 @@ CONTAINS
 !!   output parameters
     , Pg              & ! Gross photosynthetic rate (pmolC cell-1 s-1)
     , F_zDO           & ! Flux of DO  (pmolO2 cell-1 s-1)
-    , F_zROS          & ! Flux of ROS from photosystem (pmol cell-1 s-1)
+    , F_zH2O2          & ! Flux of H2O2 from photosystem (pmol cell-1 s-1)
     )
 !-----------------------------------------------------------------------
 
@@ -2034,7 +2034,7 @@ CONTAINS
     real(8), intent(inout) :: RuBPn
 !   output parameters
     real(8), intent(out) :: Pg
-    real(8), intent(out) :: F_zDO, F_zROS
+    real(8), intent(out) :: F_zDO, F_zH2O2
 
 !------------Set Constants  ----------------------------------
     real(8), parameter :: PI  = 3.14159265359d0
@@ -2071,17 +2071,18 @@ CONTAINS
 !    real(8), parameter :: di = 1.7d-4     ! Natural decay from QAa to QAi (s-1)  !!!Assumed
     real(8), parameter :: ki2a = 1.0d-4     ! Repair rate of QAi to QAa (s-1) estimated from Takahashi et al. (2009) !!! TBD
 !    real(8), parameter :: ka = 5.0d-11     ! Repair rate of QAi to QAa (s-1) estimated from Takahashi et al. (2009) !!! TBD
-    real(8), parameter :: kros = 0.2d0   ! 
-    real(8), parameter :: kros2 = 0.2d0   !
+    real(8), parameter :: kros = 0.2d0   ! Coeff. for absorption downregulation by damage !!!Tuning
+    real(8), parameter :: kros2 = 0.2d0   ! Coeff. for repair inhibition by ROS !!!Tuning
 
-    real(8), parameter :: Vsoxmax = 1.0d-5   ! maximum superoxide detox rate (pmol cell-1 s-1)  !!! Tuning !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    real(8), parameter :: Ksox = 1.0d0      ! Half saturation constant (pmo; cell-1) !!! Tuning !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    real(8), parameter :: VsupO2max = 1.0d-5   ! maximum superoxide detox rate (pmol cell-1 s-1)  !!! Tuning !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    real(8), parameter :: KsupO2 = 1.0d0      ! Half saturation constant (pmo; cell-1) !!! Tuning !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     real(8), parameter :: kqap = 1.0d-11    ! rate constant for QAa production
     real(8), parameter :: QCzrm = 50.0d0    ! Threashold reserv QC value for Chl production 
     real(8), parameter :: uchl_max = 1.0d-4 ! Maximum Chl production rate (pg cell-1 s-1)  (Asssumed)
     real(8), parameter :: QAt = 1.2d-6      ! Total RCII (pmol RCII cell-1) 
-    real(8), parameter :: k_ros_eff = 0.05d0 !ROS production efficiency from J_ee (dimensionless)
+    real(8), parameter :: k_ros_eff = 0.05d0 ! Assumed ROS production efficiency from J_ee (dimensionless)
+    real(8), parameter :: Ik_rep = 50.0d0 ! Saturation light intensity for repair !!!Tuning
 !---------------------------------------------------------------------
     real(8) :: QAt       ! Total RCII (pmol RCII cell-1)
     real(8) :: QAa       ! Active RCII (pmol RCII cell-1)
@@ -2102,13 +2103,13 @@ CONTAINS
     real(8) :: K_QAi
     real(8) :: F_QAd, F_QAp
     real(8) :: dChl_dt   ! Chl concentration (pg/cell/s)
-    real(8) :: F_zSOx   ! Flux of Superoxide (O2-) from photosystem (pmol cell-1 s-1)
+    real(8) :: F_zSupO2   ! Flux of Superoxide (O2-) from photosystem (pmol cell-1 s-1)
     real(8) :: F_NADPH  ! Flux of normalized NADPH (s-1)
     real(8) :: F_RuBP   ! Flux of normalized RuBP (s-1)
-    real(8) :: F_ONOO   ! Flux of ペルオキシナイトライト
+    real(8) :: F_ONOO   ! Flux of ペルオキシナイトライト, RNSの一種
     real(8) :: n_assim, n_dissim, n_repro, p_repro  ! for Nutrient, Coral Size dynamics
     real(8) :: no3_trans, nh4_trans, no3_reduc, p_assim ! for Nutrient, Coral Size dynamics
-!    real(8) :: phi      ! Vo/Vc
+    real(8) :: phi      ! Vo/Vc
     real(8) :: cff      ! for easy cal
 #  if defined CORAL_TESTMODE
 !  Output
@@ -2129,8 +2130,8 @@ CONTAINS
     TK = Tamb + 273.15 !(K)
     cff = (TK-298.15d0)/298.15d0/Rg/TK
 
-    f_temp = exp(Ea*((TK-298.15d0)/298.15d0/Rg/(TK+25.d0)))* &
-              (1.0d0+exp((298.15d0*dS-dH)/Rg/298.15d0))/(1.0d0+exp((TK*dS-dH)/Rg/TK))
+    f_temp = exp(Ea * ((TK - 298.15d0) / 298.15d0 / Rg / (TK+25.d0))) * &
+              (1.0d0 + exp((298.15d0 * dS - dH) / Rg / 298.15d0))  /(1.0d0 + exp((TK * dS-dH) / Rg / TK))
 
     Kco2 = 404.9d-1*exp(79430.0d0*cff)  !! Bernacchi et al. 2001
     Ko2  = 500.d-1*exp(36380.0d0*cff)  !! Bernacchi et al. 2001
@@ -2143,7 +2144,7 @@ CONTAINS
 !    Vo = phi*Vc
 
     !---- Determine actual electron transport rate (J_ep) based on bottleneck ----
-    J_ep = min(J_ep_in, 4.d0*Vc+4.d0*Vo)
+    J_ep = min(J_ep_in, 4.d0*Vc+4.d0 * Vo)
     !          (Supply, Demand)
     ! J_ep: Actual ETR, limited by the smaller of Supply (light-driven) or Demand (Calvin cycle).
 
@@ -2152,27 +2153,42 @@ CONTAINS
     !               (Excess, Zero)
     ! J_ee: Electrons supplied but not used by Calvin cycle. Cannot be negative.
 
-    Pg = J_ep/4.d0 * (Vc-0.5d0*Vo)/(Vc+Vo)
+    Pg = J_ep/4.d0 * (Vc-0.5d0 * Vo)/(Vc + Vo)
 
 !---- Oxygen production rate  (pmol O2 cell-1 s-1) ---
-    F_zDO = (J_ep_in / 4.0d0)-Vo
+    F_zDO = (J_ep_in/4.0d0) - Vo
 
 !---- Electrons that form ROS  (pmol ROS cell-1 s-1) ---
 !   NADP+ + H+ + 2 e- -> NADPH
-    F_NADPH = 0.5d0*J_ep_in * (1.0d0-NADPHn) 
+    F_NADPH = 0.5d0 * J_ep_in * (1.0d0-NADPHn) 
 
-    F_RuBP = kphot*NADPHn*(1.0d0-RuBPn)
+    F_RuBP = kphot * NADPHn * (1.0d0-RuBPn)
 
 !   O2 + e- -> O2- 
-    F_zSOx = k_ros_eff * J_ep_in
-    ! F_zSOx = NADPHn * J_ep_in
+    F_zSupO2 = k_ros_eff * J_ee
+    ! F_zSupO2 = NADPHn * J_ep_in
 
-!   Superoxide desimutaze (SOD)     
-!    2 O2- + 2 H+ -> H2O2 + O2
-    F_zROS = Vsoxmax * SOx/(Ksox + SOx)!ukモデルとは意味合いが違う、これはスーパーオキシドから過酸化水素への変換速度
+!   2 O2- -> H2O2 + O2 by SOD reaction(quasi steady state)
+    F_zH2O2 = 0.5d0 * F_zSupO2
 
 !   DO flux (pmol O2 cell-1 s-1) 
-    F_zDO = F_zDO - F_zSOx + F_zROS
+    F_zDO = F_zDO - F_zSupO2 + F_zH2O2
+
+    !-----Superoxide and Hydrogen peroxide concentration (pmol cell-1) -----------------
+    !   F_zSupO2: O2 + e- -> O2- 
+    !   F_zH2O2: 2 O2- + 2 H+ -> H2O2 + O2    
+    !   ※d SupO2/dt = F_zSupO2 - 2*F_zH2O2 = 0 (quasi steady state)
+    !
+    !   O2 + e- -> O2- 
+    !      F_zSupO2 = NADPHn * J_ep_in  
+    !      F_zSupO2 = k_ros_eff * J_ee
+    !
+    !   2 O2- + 2 H+ -> H2O2 + O2 (Superoxide dismutaze (SOD)) 
+    !      F_zH2O2 = VsupO2max * SupO2/(KsupO2 + SupO2)
+    !
+    !    SupO2x = NADPHn*J_ep_in*KsupO2/(2.0d0*VsupO2max - NADPHn*J_ep_in)
+    !    SupO2 = SupO2 + ( F_zSupO2 - 2.0d0*F_zH2O2 ) *dt
+    !------------------------------------------------------------------------------------
 
 !===== Photoinhibition calculation ==============================================
 
@@ -2184,21 +2200,24 @@ CONTAINS
     QAt  = QAa + QAi
     
 !---- Photoinihibition rate of QAa to QAi  (pmol RCII cell-1 s-1) ---
-    Ja2i = ka2i*PFDsurf * QAa
+    Ja2i = ka2i * PFDsurf * QAa
 !    Ja2i = 0.0d0  ! No photidamage case
 
 !---- Repair rate of QAi to QAo  (pmol RCII cell-1 s-1) --- !!!!!!!!!!!!!!!!! Need update
 !    Ji2a = ka * QAi * exp(-kros2*ROS)  !!! ROS concentration dependent repair
 !    Ji2a = ka * QAi * exp(-kros2*ROS) * (J_ep_in*1.0d4)  !!! ROS concentration dependent repair
-    Ji2a = ki2a * QAi * exp(-kros2*ROS) * tanh(PFDsurf/50.0d0)  !!! ROS concentration dependent repair
+    Ji2a = ki2a * QAi * exp(-kros2*ROS) * tanh(PFDsurf/Ik_rep)  !!! ROS concentration dependent repair
 
 ! ----- QAa production rate (pmol RCII cell-1 s-1) -------
-    F_QAp = kqap * (1.0d0-QCzr/QCzrm) 
+!    F_QAp = kqap * (1.0d0-QCzr/QCzrm)
 
 !===== Time step progressing ================================================
 
 !-----Inhibited RCII -----------------
-    QAi = QAi +( Ja2i - Ji2a )*dt
+    QAi = QAi + (                                     &
+                  Ja2i                                & ! Active to inactive
+                 -Ji2a                                & ! Repair of QAi to QAo
+                )*dt
 
 !-----Active RCII (updated) -----------------
     QAa = QAt - QAi
@@ -2236,19 +2255,6 @@ CONTAINS
 !    RuBPn = 1.0d0 - (2.0d0+1.5d0*phi)*Vc/NADPHn/kphot
     RuBPn = RuBPn + ( F_RuBP - (2.0d0+1.5d0*phi)*Vc ) *dt
 
-!-----Superoxide concentration (pmol cell-1) -----------------
-!   F_zSOx: O2 + e- -> O2- 
-!   F_zROS: 2 O2- + 2 H+ -> H2O2 + O2
-!    
-!     d SOx/dt = F_zSOx - 2*F_zROS = 0 (quasi steady state)
-!   O2 + e- -> O2- 
-!      F_zSOx = NADPHn * J_ep_in  
-!   2 O2- + 2 H+ -> H2O2 + O2 (Superoxide desimutaze (SOD)) 
-!      F_zROS = Vsoxmax * SOx/(Ksox + SOx)
-!
-!    SOx = NADPHn*J_ep_in*Ksox/(2.0d0*Vsoxmax - NADPHn*J_ep_in)
-    SOx = SOx + ( F_zSOx - 2.0d0*F_zROS ) *dt
-
 !------------------------------------------------------------------------
 ! Print section (for debug)
 
@@ -2271,7 +2277,7 @@ CONTAINS
        , QAt, QAa, FvFm, YII, J_ep_in                               &
        , Ji2a, Ja2i, kr2o, s_ab, F_zSOx, SOx                          &
        , Pg, J_ep_in*e2c, Vc, Vo, F_zDO                       &
-       , Chl, cDO, cCO2, F_QAp, NADPHn, RuBPn, F_zROS, ROS
+       , Chl, cDO, cCO2, F_QAp, NADPHn, RuBPn, F_zH2O2, ROS
       
     END IF
 #  endif

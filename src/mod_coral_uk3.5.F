@@ -2040,7 +2040,7 @@ CONTAINS
     real(8), parameter :: s_0 = 7.d0    ! Absorption cross-section (m2 (umol photon)-1); ~390 (ANGSTROM^2 quanta-1) Suggett et al. (2008) * 6.02x10^23 quanta = 1 mol photon !!!uk tuning at ver.3.3 11/22
     real(8) :: s_ab    ! Absorption cross-section (m2 (umol photon)-1); ~390 (ANGSTROM^2 quanta-1) Suggett et al. (2008) * 6.02x10^23 quanta = 1 mol photon
     real(8), parameter :: phi = 1.0d0     ! quantum efficiency of charge separation at PSII(e- photon-1)  Ross et al. (2008) !!!!!!!!!!!!!check
-    real(8), parameter :: Trb = 33.8d0    ! (oC) estimated from Lilley et al. (2010)
+    real(8), parameter :: Trb = 33.8d0    ! (oC) estimated from Lilly et al. (2010)
     real(8), parameter :: arb = 0.55d0    ! (K-1) estimated from Lilley et al. (2010)
     real(8), parameter :: e2o = 0.25d0    ! Yield of O2 per electron (mol O2 (mol e-)-1) 2H2O -> 4e- +4H+ + O2 
     real(8), parameter :: o2c = 1.0d0     ! Photosynthetic quotient (mol O2 (mol CO2)-1) !!!Assumed
