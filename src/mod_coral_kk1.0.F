@@ -1968,7 +1968,7 @@ CONTAINS
        , F_Zelm, Repro*ZOOX(ng)%dens(n,i,j), Morta*ZOOX(ng)%dens(n,i,j)  &
 #   if defined CORAL_NUTRIENTS
        , ZOOX(ng)%QN(iNt,n,i,j), ZOOX(ng)%QP(iPt,n,i,j)                  &
-!       , N_repro, P_repro                                                & ROSモデル開発が進み次第必要なものだけ使用
+!       , N_repro, P_repro                                                &
 !       , ZOOX(ng)%NO3(iNt,n,i,j), ZOOX(ng)%NH4(iNt,n,i,j), F_ONOO        &
 !       , NO3_trans, NH4_trans,NO3_reduc, N_assim, N_dissim               &
 !       , ZOOX(ng)%PO4(iPt,n,i,j), PO4_trans, P_assim                     &
@@ -2080,9 +2080,11 @@ CONTAINS
     real(8), parameter :: kqap = 1.0d-11    ! rate constant for QAa production
     real(8), parameter :: QCzrm = 50.0d0    ! Threashold reserv QC value for Chl production 
     real(8), parameter :: uchl_max = 1.0d-4 ! Maximum Chl production rate (pg cell-1 s-1)  (Asssumed)
-    real(8), parameter :: QAt = 1.2d-6      ! Total RCII (pmol RCII cell-1) 
+    ! real(8), parameter :: QAt = 1.2d-6      ! Total RCII (pmol RCII cell-1) 
     real(8), parameter :: k_ros_eff = 0.05d0 ! Assumed ROS production efficiency from J_ee (dimensionless)
     real(8), parameter :: Ik_rep = 50.0d0 ! Saturation light intensity for repair !!!Tuning
+    real(8), parameter :: Topt_rep = 25.0d0   ! 修復最適水温
+    real(8), parameter :: sig_rep  = 5.0d0    ! 水温幅
 !---------------------------------------------------------------------
     real(8) :: QAt       ! Total RCII (pmol RCII cell-1)
     real(8) :: QAa       ! Active RCII (pmol RCII cell-1)
@@ -2111,6 +2113,7 @@ CONTAINS
     real(8) :: no3_trans, nh4_trans, no3_reduc, p_assim ! for Nutrient, Coral Size dynamics
     real(8) :: phi      ! Vo/Vc
     real(8) :: cff      ! for easy cal
+    real(8) :: f_T_rep
 #  if defined CORAL_TESTMODE
 !  Output
 !    real(8), parameter :: CORAL_OUTPUT_INTERVAL  = 5.0d0    ! Output interval (min)
@@ -2122,11 +2125,8 @@ CONTAINS
 #  endif
 
 !===== Photosynthetic rate calculation ==============================================
-    
-!---- electrons leading to C fixation (electron transfer rate (ETR)) (pmol e- cell-1 s-1) ---
-    J_ep_in = kr2o * QAr
 
-!---- Photosyenthetic rate (von Caemmerer, 2000; Eq.(2.34))
+!---- Photosyenthetic rate (von Caemmerer, 2000; Eq.(2.34)) ----
     TK = Tamb + 273.15 !(K)
     cff = (TK-298.15d0)/298.15d0/Rg/TK
 
@@ -2138,35 +2138,35 @@ CONTAINS
     
     Vc = Vcmax * f_temp * cCO2/(cCO2+Kco2*(1.0d0+cDO/Ko2)) 
     Vo = Vomax*f_temp*cDO/(cDO+Ko2*(1.0d0+cCO2/Kco2))
-    ! &
-    !                     * RuBPn/(RuBPn+Krupb)
-!    phi = Vomax/Vcmax*(cDO/Ko2)/(cCO2/Kco2)
-!    Vo = phi*Vc
 
-    !---- Determine actual electron transport rate (J_ep) based on bottleneck ----
+    phi = Vomax/Vcmax*(cDO/Ko2)/(cCO2/Kco2)
+
+!   electrons leading to C fixation (electron transfer rate (ETR)) (pmol e- cell-1 s-1) 
+    J_ep_in = kr2o * QAr
+
+!   Determine actual electron transport rate (J_ep) based on bottleneck 
     J_ep = min(J_ep_in, 4.d0*Vc+4.d0 * Vo)
     !          (Supply, Demand)
     ! J_ep: Actual ETR, limited by the smaller of Supply (light-driven) or Demand (Calvin cycle).
 
-    !---- Calculate excess electrons (J_ee) ----
+!   Calculate excess electrons (J_ee) 
     J_ee = max(J_ep_in-J_ep, 0.0d0)
     !               (Excess, Zero)
     ! J_ee: Electrons supplied but not used by Calvin cycle. Cannot be negative.
 
+!   Carbon fixation rate 
     Pg = J_ep/4.d0 * (Vc-0.5d0 * Vo)/(Vc + Vo)
 
-!---- Oxygen production rate  (pmol O2 cell-1 s-1) ---
+!   Oxygen production rate  (pmol O2 cell-1 s-1) 
     F_zDO = (J_ep_in/4.0d0) - Vo
 
-!---- Electrons that form ROS  (pmol ROS cell-1 s-1) ---
+!---- Electrons that form ROS  (pmol ROS cell-1 s-1) ----
 !   NADP+ + H+ + 2 e- -> NADPH
     F_NADPH = 0.5d0 * J_ep_in * (1.0d0-NADPHn) 
-
     F_RuBP = kphot * NADPHn * (1.0d0-RuBPn)
 
 !   O2 + e- -> O2- 
     F_zSupO2 = k_ros_eff * J_ee
-    ! F_zSupO2 = NADPHn * J_ep_in
 
 !   2 O2- -> H2O2 + O2 by SOD reaction(quasi steady state)
     F_zH2O2 = 0.5d0 * F_zSupO2
@@ -2174,83 +2174,79 @@ CONTAINS
 !   DO flux (pmol O2 cell-1 s-1) 
     F_zDO = F_zDO - F_zSupO2 + F_zH2O2
 
-    !-----Superoxide and Hydrogen peroxide concentration (pmol cell-1) -----------------
-    !   F_zSupO2: O2 + e- -> O2- 
-    !   F_zH2O2: 2 O2- + 2 H+ -> H2O2 + O2    
-    !   ※d SupO2/dt = F_zSupO2 - 2*F_zH2O2 = 0 (quasi steady state)
-    !
-    !   O2 + e- -> O2- 
-    !      F_zSupO2 = NADPHn * J_ep_in  
-    !      F_zSupO2 = k_ros_eff * J_ee
-    !
-    !   2 O2- + 2 H+ -> H2O2 + O2 (Superoxide dismutaze (SOD)) 
-    !      F_zH2O2 = VsupO2max * SupO2/(KsupO2 + SupO2)
-    !
-    !    SupO2x = NADPHn*J_ep_in*KsupO2/(2.0d0*VsupO2max - NADPHn*J_ep_in)
-    !    SupO2 = SupO2 + ( F_zSupO2 - 2.0d0*F_zH2O2 ) *dt
-    !------------------------------------------------------------------------------------
+!-----Superoxide and Hydrogen peroxide concentration (pmol cell-1) -----------------
+!   F_zSupO2: O2 + e- -> O2- 
+!   F_zH2O2: 2 O2- + 2 H+ -> H2O2 + O2    
+!   ※d SupO2/dt = F_zSupO2 - 2*F_zH2O2 = 0 (quasi steady state)
+!
+!   O2 + e- -> O2- 
+!      F_zSupO2 = NADPHn * J_ep_in  
+!
+!   2 O2- + 2 H+ -> H2O2 + O2 (Superoxide dismutaze (SOD)) 
+!      F_zH2O2 = VsupO2max * SupO2/(KsupO2 + SupO2)
+!
+!      SupO2 = NADPHn*J_ep_in*KsupO2/(2.0d0*VsupO2max - NADPHn*J_ep_in)
+!      SupO2 = SupO2 + ( F_zSupO2 - 2.0d0*F_zH2O2 ) *dt
+!------------------------------------------------------------------------------------
 
 !===== Photoinhibition calculation ==============================================
 
-!----- Active RCII -----------------
-!    QAa = QAt - ZOOX(ng)%QAi(n,i,j)
-    QAa  = QAo + QAr
-
-!-----Total RCII -----------------
-    QAt  = QAa + QAi
+!   RCII pool
+    QAa  = QAo + QAr ! active RCII
+    QAt  = QAa + QAi ! total RCII
     
-!---- Photoinihibition rate of QAa to QAi  (pmol RCII cell-1 s-1) ---
+!   Photoinihibition rate of QAa to QAi  (pmol RCII cell-1 s-1)
     Ja2i = ka2i * PFDsurf * QAa
 !    Ja2i = 0.0d0  ! No photidamage case
 
-!---- Repair rate of QAi to QAo  (pmol RCII cell-1 s-1) --- !!!!!!!!!!!!!!!!! Need update
-!    Ji2a = ka * QAi * exp(-kros2*ROS)  !!! ROS concentration dependent repair
-!    Ji2a = ka * QAi * exp(-kros2*ROS) * (J_ep_in*1.0d4)  !!! ROS concentration dependent repair
-    Ji2a = ki2a * QAi * exp(-kros2*ROS) * tanh(PFDsurf/Ik_rep)  !!! ROS concentration dependent repair
+ !  Repair rate of QAi to QAo  (pmol RCII cell-1 s-1) --- !!!!!!!!!!!!!!!!! Need update
+ !    Ji2a = ka * QAi * exp(-kros2*ROS)  !!! ROS concentration dependent repair
+ !    Ji2a = ka * QAi * exp(-kros2*ROS) * (J_ep_in*1.0d4)  !!! ROS concentration dependent repair
+ !    Ji2a = ki2a * QAi * exp(-kros2*ROS) * tanh(PFDsurf/Ik_rep)  !!! ROS concentration dependent repair
+    f_T_rep = exp( -((Tamb - Topt_rep)**2) / (2.0d0 * sig_rep**2) ) !repair effeciency depend on Tamb
+    Ji2a = ki2a * f_T_rep * QAi * exp(-kros2*ROS) * tanh(PFDsurf/Ik_rep)
 
-! ----- QAa production rate (pmol RCII cell-1 s-1) -------
-!    F_QAp = kqap * (1.0d0-QCzr/QCzrm)
+ !  QAa production rate (pmol RCII cell-1 s-1)
+ !    F_QAp = kqap * (1.0d0-QCzr/QCzrm)
 
-!===== Time step progressing ================================================
-
-!-----Inhibited RCII -----------------
+ !  Inhibited RCII
     QAi = QAi + (                                     &
                   Ja2i                                & ! Active to inactive
                  -Ji2a                                & ! Repair of QAi to QAo
-                )*dt
+                ) * dt
 
-!-----Active RCII (updated) -----------------
+ !  Active RCII (updated) 
     QAa = QAt - QAi
 
-!---- electron absorption rate (s-1) 
-!   = reduction of active QA (s-1) ---
-!    s_ab = s_0*0.83d0*exp(-kros*ROS)  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!    s_ab = s_0*0.83d0
-!    s_ab = s_0*0.65d0
+ !  electron absorption rate (s-1) = reduction of active QA (s-1) 
+ !    s_ab = s_0*0.83d0*exp(-kros*ROS)  !!!!!!!!!!!!!!
+ !    s_ab = s_0*0.83d0
+ !    s_ab = s_0*0.65d0
     s_ab = s_0 * 0.80d0*exp(-kros*QAi/QAt)
 
     ko2r = s_ab * Chl * phi_q * PFDsurf 
 
-!-----Reduced RCII -----------------
+ !  Reduced RCII 
     QAr = ko2r/(ko2r+kr2o) * QAa
 
-!-----Oxidizes RCII -----------------
+ !  Oxidizes RCII
     QAo = QAa - QAr
 
 !===== Chl dynamics calculation ==============================================
+
+!   Chl concentration (pg cell-1) 
 !    dChl_dt = uchl_max * (1.0d0 - QCzr/QCzr_max)
 !    dChl_dt = - 3.0d-6*ROS + 3.0d-5
     dChl_dt = 1.0d-6*(3.0d0-ROS)
-!-----Chl concentration (pg cell-1) -----------------
     Chl = Chl + dChl_dt *dt
     Chl = max(Chl,0.0d0) !!!Error handring
 
-!-- NADPHn = NADPH/(NADPH + NADP+) concentration (no unit, (pmol cell-1)/(pmol cell-1) ) -----------------
+!   NADPHn = NADPH/(NADPH + NADP+) concentration (no unit, (pmol cell-1)/(pmol cell-1) ) 
 !   Eq. (23) in Farquhar et al. (1980)
 !    NADPHn = 1.0d0 - (4.0d0+3.0d0*phi)*Vc/J_ep_in
     NADPHn = NADPHn + (F_NADPH - F_RuBP) *dt
 
-!-- RuBPn = RuBP/(0.5*PGA + RuBP) concentration (no unit, (pmol cell-1)/(pmol cell-1) ) -----------------
+!   RuBPn = RuBP/(0.5*PGA + RuBP) concentration (no unit, (pmol cell-1)/(pmol cell-1) ) 
 !   Eq. (27) in Farquhar et al. (1980)
 !    RuBPn = 1.0d0 - (2.0d0+1.5d0*phi)*Vc/NADPHn/kphot
     RuBPn = RuBPn + ( F_RuBP - (2.0d0+1.5d0*phi)*Vc ) *dt
@@ -2275,7 +2271,7 @@ CONTAINS
          date, PFDsurf, Tamb                                        &
        , QAo, QAr, QAi                                              &
        , QAt, QAa, FvFm, YII, J_ep_in                               &
-       , Ji2a, Ja2i, kr2o, s_ab, F_zSOx, SOx                          &
+       , Ji2a, Ja2i, kr2o, s_ab, F_zSupO2                          &
        , Pg, J_ep_in*e2c, Vc, Vo, F_zDO                       &
        , Chl, cDO, cCO2, F_QAp, NADPHn, RuBPn, F_zH2O2, ROS
       

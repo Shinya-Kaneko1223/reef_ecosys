@@ -704,9 +704,9 @@ END SUBROUTINE write_crl_ave_lavel
         'time','PFD','Tamb'                                     &
        ,'QAo','QAr','QAi'                                       &
        ,'QAt','QAa','Fv/Fm','Y(II)','J_ep_in'                   &
-       ,'Ji2a','Ja2i','kr2o','s_ab','F_zSOx','SOx'                &
+       ,'Ji2a','Ja2i','kr2o','s_ab','F_zSupO2'                   &
        ,'Pg', 'J_ep_in*e2c', 'Vc', 'Vo', 'F_zDO'                       &
-       ,'Chl','cDO','cCO2','F_QAp','NADPHn','RuBPn','F_zROS','ROS'
+       ,'Chl','cDO','cCO2','F_QAp','NADPHn','RuBPn','F_zH2O2','ROS(H2O2)'
      
     RETURN
 

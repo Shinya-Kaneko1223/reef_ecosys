@@ -2186,7 +2186,7 @@ CONTAINS
     J_ee = max(J_ep_in-J_ep, 0.0d0)
 
 !   mol of e- required to make mol ROS (mol e- mol RO-1) O2 + 2e- + 2H+ -> H2O2 
-    F_zROS = f_RO*J_ee*0.5d0 !senseimodelとは違う、これは過剰電子からROS全体への総生成速度                
+    F_zROS = f_RO*J_ee*0.5d0 !現modelとは違う、これは過剰電子からROS全体への総生成速度                
 !    Wc = Vcmax*(cCO2-GNM)/(cCO2 + Kco2*(1 + cDO/Ko2)) 
 !    Wj = J_ep_in*(cCO2-GNM)/(4.d0*cCO2 + 8.d0*GNM)
     Pg = J_ep/4.d0 * (Vc-0.5d0*Vo)/(Vc+Vo)

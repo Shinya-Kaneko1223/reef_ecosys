@@ -1,6 +1,6 @@
 &ecosys_config
 ! Simulation period     
-  Tmax = 2.0d0  ! days
+  Tmax = 14.0d0  ! days
 ! Start time
   time0 = 0.0d0 ! day
 
@@ -18,8 +18,8 @@
   Jm = 1
   N  = 1
 
-  dt = 0.005d0 ! Time step (sec)
-
+  dt = 1.0d0 ! Time step (sec)
+!0.005
   depth = 1.0d0 ! Set depth (m)
 
   isplitc  = 20
